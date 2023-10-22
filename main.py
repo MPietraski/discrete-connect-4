@@ -5,38 +5,42 @@ from copy import copy, deepcopy
 
 counter = 0
 
-def minimax2(board, depth, maxTurn):
+def minimax2(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
     score = board.evaluate()
 
-    if score == 10:
-        return score
-    if score == -10:
+    if score == 100000000+1 or score == -100000000+1 or depth == tergetDepth:
         return score
     if board.availableColumns() == []:
         return 0
     
     if maxTurn:
-        best = -1000
+        best = -1000000000
         for i in board.availableColumns():
             board.place("X",i)
-            best = max(best, minimax2(board, depth+1, not maxTurn))
+            best = max(best, minimax2(board, depth+1, not maxTurn, alpha, beta))
             board.remove(i)
+            alpha = max(alpha, best)
+            if alpha >= beta:
+                break
         return best
     else:
-        best = 1000
+        best = 10000000000
         for i in board.availableColumns():
             board.place("O",i)
-            best = min(best,minimax2(board, depth+1, not maxTurn))
+            best = min(best,minimax2(board, depth+1, not maxTurn, alpha, beta))
             board.remove(i)
-            return best
+            beta = min(best, beta)
+            if alpha >= beta:
+                break
+        return best
 
-def bestMove(board):
+def bestMove(board, targetDepth):
     bestVal = -1000
     bestMove = -1
 
     for i in board.availableColumns():
         board.place("X",i)
-        moveVal = minimax2(board, 0, False)
+        moveVal = minimax2(board, 0, targetDepth, False)
         board.remove(i)
         if moveVal > bestVal:
             bestMove = i
@@ -78,16 +82,16 @@ def minimax(depth, targetDepth, column, board, maxTurn):
         return min(nextLevel)
 
 g = GameBoard(6, 7)
-g.place("X",5)
-g.place("O",5)
-g.place("O",5)
-g.place("O",5)
+# g.place("X",5)
+# g.place("O",5)
+# g.place("O",5)
+# g.place("O",5)
 
-g.board[0][2] = "-"
-g.board[0][3] = "-"
-g.board[0][4] = "-"
+# g.board[0][2] = "-"
+# g.board[0][3] = "-"
+# g.board[0][4] = "-"
 # g.board[0][5] = "-"
-g.board[0][6] = "-"
+# g.board[0][6] = "-"
 
 # for i in [2,4,6]:
 #     g.place("X",i)
@@ -105,7 +109,21 @@ g.board[0][6] = "-"
 #     g.place("O",i)
 
 print(g)
-move = bestMove(g)
-print(move)
+while 1:
+    move = bestMove(g, 10)
+    print(move)
+    g.place("X",move[0])
+    print(g)
+    if g.checkWin("X"):
+        print("X WINS")
+        break
+    col = input("Column: ")
+    while not col.isnumeric():
+        col = input("Column: ")
+    g.place("O", int(col))
+    print(g)
+    if g.checkWin("O"):
+        print("O WINS")
+        break
 # r = minimax(0, 3, -1, g, True)
 # print(r)
