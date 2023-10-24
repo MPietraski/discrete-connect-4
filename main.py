@@ -2,110 +2,97 @@
 import math
 from game import GameBoard
 from copy import copy, deepcopy
+from blessed import Terminal
 
-counter = 0
-
-def minimax2(board, depth, maxTurn):
+# recursive minimax function that traverses the game tree to a given length and 
+# determines the optimal outcome
+def minimax(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
     score = board.evaluate()
 
-    if score == 10:
-        return score
-    if score == -10:
+    if score == 100000000 + 1 or score == -100000000 + 1 or depth == tergetDepth:
         return score
     if board.availableColumns() == []:
         return 0
-    
+
     if maxTurn:
-        best = -1000
+        best = -1000000000
         for i in board.availableColumns():
-            board.place("X",i)
-            best = max(best, minimax2(board, depth+1, not maxTurn))
+            board.place("X", i)
+            best = max(best, minimax(board, depth + 1, not maxTurn, alpha, beta))
             board.remove(i)
+            alpha = max(alpha, best)
+            if alpha >= beta:
+                break
         return best
     else:
-        best = 1000
+        best = 10000000000
         for i in board.availableColumns():
-            board.place("O",i)
-            best = min(best,minimax2(board, depth+1, not maxTurn))
+            board.place("O", i)
+            best = min(best, minimax(board, depth + 1, not maxTurn, alpha, beta))
             board.remove(i)
-            return best
+            beta = min(best, beta)
+            if alpha >= beta:
+                break
+        return best
 
-def bestMove(board):
+# determines the best next move by running the minimax algorithm for each option 
+# to find the one that produces the best optimal payoff
+def bestMove(board, targetDepth):
     bestVal = -1000
     bestMove = -1
-
     for i in board.availableColumns():
-        board.place("X",i)
-        moveVal = minimax2(board, 0, False)
+        board.place("X", i)
+        moveVal = minimax(board, 0, targetDepth, False)
         board.remove(i)
         if moveVal > bestVal:
             bestMove = i
             bestVal = moveVal
     return bestMove, bestVal
 
-def minimax(depth, targetDepth, column, board, maxTurn):
-    '''
-    Recursive minimax function of a game tree with n branches from each internal 
-    node
-   
-    Parameters:
-        depth: the current depth into te tree, starting at 0 for the root
-        targetDepth: the depth to go to to count wins
-        column: the column that was just dropped into
-        board: the board before the next move
-        maxTurn: True if it is the maximizer's turn, False if it is not
-    Returns:
-        The payoff at the end of an optimized game
-    '''
-    global counter
-    counter += 1
-    # print(counter,depth,column)
-    if column >= 0:
-        if maxTurn: 
-            symb = "O"
-        else:
-            symb = "X"
-        board.place(symb, column)
-    
-    if (depth == targetDepth):
-        return board
-
-    nextLevel = [minimax(depth+1, targetDepth, i, deepcopy(board), not(maxTurn)) for i in board.avaliableColumns()]
-
-    if(maxTurn):
-        return max(nextLevel)
-    else:
-        return min(nextLevel)
-
+term = Terminal()
 g = GameBoard(6, 7)
-g.place("X",5)
-g.place("O",5)
-g.place("O",5)
-g.place("O",5)
 
-g.board[0][2] = "-"
-g.board[0][3] = "-"
-g.board[0][4] = "-"
-# g.board[0][5] = "-"
-g.board[0][6] = "-"
-
-# for i in [2,4,6]:
-#     g.place("X",i)
-#     g.place("X",i)
-#     g.place("O",i)
-#     g.place("O",i)
-#     g.place("X",i)
-#     g.place("X",i)
-# for i in [3,5]:
-#     g.place("O",i)
-#     g.place("O",i)
-#     g.place("X",i)
-#     g.place("X",i)
-#     g.place("O",i)
-#     g.place("O",i)
-
-print(g)
-move = bestMove(g)
-print(move)
-# r = minimax(0, 3, -1, g, True)
-# print(r)
+# game loop
+print(term.home + term.clear + str(g))
+while 1:
+    # Computer makes its ideal move
+    move = bestMove(g, 10)
+    print(move)
+    g.place("X", move[0])
+    # Print the board
+    print(
+        term.home
+        + term.clear
+        + str(g)
+        .replace("X", term.red + "●" + term.normal)
+        .replace("O", term.yellow + "●" + term.normal)
+        .replace("_", "○")
+    )
+    # Check for a computer win
+    if g.checkWin("X"):
+        print(term.red + term.underline + term.bold + "RED WINS!" + term.normal)
+        break
+    # Make move based on user input
+    move_valid = g.place("O", input("Column: "))
+    while move_valid == -1:
+        print(
+            "enter a valid column number"
+            + term.move_up
+            + term.move_x(0)
+            + term.clear_eol,
+            end="",
+        )
+        move_valid = g.place("O", input("Column: "))
+    # Print board
+    print(
+        term.home
+        + term.clear
+        + str(g)
+        .replace("X", term.red + "●" + term.normal)
+        .replace("O", term.yellow + "●" + term.normal)
+        .replace("_", "○")
+    )
+    # Check for a player win
+    if g.checkWin("O"):
+        print(term.yellow + term.underline + term.bold + "YELLOW WINS!" + term.normal)
+        break
