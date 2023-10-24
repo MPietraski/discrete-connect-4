@@ -1,4 +1,3 @@
-# Based on code from https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-1-introduction
 import math
 from game import GameBoard
 from copy import copy, deepcopy
