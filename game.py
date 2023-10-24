@@ -57,7 +57,7 @@ class GameBoard:
     def evaluate(self):
         return self.heuristic("X") - self.heuristic("O") + 1
 
-    # calculates how good a given player is doing in the game, based on the number of pieces 
+    # calculates how good a given player is doing in the game, based on the number of pieces
     # they have in a line that has the ability to reach 4
     def heuristic(self, symb):
         score = 0
@@ -251,7 +251,7 @@ class GameBoard:
                         ):  # _ _ X X
                             score += 10
         return score
-    
+
     # checks for 4 of a certain piece in a row anywhere on the board
     def checkWin(self, symb):
         curLength = 0
@@ -275,53 +275,13 @@ class GameBoard:
                 else:
                     curLength = 0
         # Check for left-right diagonal lengths
-        for r in range(self.h):
-            for i, c in enumerate(range(self.w)):
-                try:
-                    if self.board[r + i][c] == symb:
-                        curLength += 1
-                        if curLength >= cutoff:
-                            return True
-                    else:
-                        curLength = 0
-                except:
-                    curLength = 0
-                    break
-        for c in range(self.w):
-            for i, r in enumerate(range(self.h)):
-                try:
-                    if self.board[r][c + i] == symb:
-                        curLength += 1
-                        if curLength >= cutoff:
-                            return True
-                    else:
-                        curLength = 0
-                except:
-                    curLength = 0
-                    break
+        for r in range(self.h - cutoff + 1):
+            for c in range(self.w - cutoff + 1):
+                if all(self.board[r + i][c + i] == symb for i in range(cutoff)):
+                    return True
         # Check for right-left diagonal lengths
-        for r in range(self.h):
-            for i, c in enumerate(range(self.w)):
-                try:
-                    if self.board[r - i][c] == symb:
-                        curLength += 1
-                        if curLength >= cutoff:
-                            return True
-                    else:
-                        curLength = 0
-                except:
-                    curLength = 0
-                    break
-        for c in range(self.w):
-            for i, r in enumerate(range(self.h)):
-                try:
-                    if self.board[r][c - i] == symb:
-                        curLength += 1
-                        if curLength >= cutoff:
-                            return True
-                    else:
-                        curLength = 0
-                except:
-                    curLength = 0
-                    break
+        for r in range(self.h - cutoff + 1):
+            for c in range(cutoff - 1, self.w):
+                if all(self.board[r + i][c - i] == symb for i in range(cutoff)):
+                    return True
         return False
