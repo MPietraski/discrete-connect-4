@@ -3,7 +3,8 @@ from game import GameBoard
 from copy import copy, deepcopy
 from blessed import Terminal
 
-# recursive minimax function that traverses the game tree to a given length and 
+
+# recursive minimax function that traverses the game tree to a given length and
 # determines the optimal outcome
 def minimax(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
     score = board.evaluate()
@@ -34,7 +35,8 @@ def minimax(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
                 break
         return best
 
-# determines the best next move by running the minimax algorithm for each option 
+
+# determines the best next move by running the minimax algorithm for each option
 # to find the one that produces the best optimal payoff
 def bestMove(board, targetDepth):
     bestVal = -1000
@@ -48,50 +50,104 @@ def bestMove(board, targetDepth):
             bestVal = moveVal
     return bestMove, bestVal
 
+
+def prettyPrintBoard(board):
+    print(
+        term.home
+        + str(board)
+        .replace("X", term.red + "●" + term.normal)
+        .replace("O", term.yellow + "●" + term.normal)
+        .replace("_", "○"),
+        end="",
+        flush=True,
+    )
+
+
+def printXY(x, y, char):
+    print(
+        term.move_xy(x, y) + char + term.move_xy(x, y),
+        end="",
+        flush=True,
+    )
+
+
+def printCursor():
+    printXY(2 * col + 1, 0, term.yellow + "●" + term.normal)
+    print(term.move_xy(0, 7), end="", flush=True)
+
+
+def eraseCursor():
+    printXY(2 * col + 1, 0, str(col))
+
+
 term = Terminal()
 g = GameBoard(6, 7)
 
+col = 0  # user selected column
+
 # game loop
-print(term.home + term.clear + str(g))
+print(term.home + term.clear, end="", flush=True)
+prettyPrintBoard(g)
+printCursor()
+print(
+    "Use the arrow keys to select a column.\nPress Enter or Space to drop your piece."
+)
 while 1:
     # Computer makes its ideal move
     move = bestMove(g, 10)
-    print(move)
+    # print(move)
     g.place("X", move[0])
     # Print the board
-    print(
-        term.home
-        + term.clear
-        + str(g)
-        .replace("X", term.red + "●" + term.normal)
-        .replace("O", term.yellow + "●" + term.normal)
-        .replace("_", "○")
-    )
+    prettyPrintBoard(g)
+    printCursor()
     # Check for a computer win
     if g.checkWin("X"):
-        print(term.red + term.underline + term.bold + "RED WINS!" + term.normal)
+        print(term.clear)
+        prettyPrintBoard(g)
+        print("\n" + term.red + term.underline + term.bold + "RED WINS!" + term.normal)
         break
     # Make move based on user input
-    move_valid = g.place("O", input("Column: "))
-    while move_valid == -1:
-        print(
-            "enter a valid column number"
-            + term.move_up
-            + term.move_x(0)
-            + term.clear_eol,
-            end="",
-        )
-        move_valid = g.place("O", input("Column: "))
+    with term.cbreak():
+        # if prev selected column unavailable, move to next
+        while col not in g.availableColumns():
+            eraseCursor()
+            col += 1
+            if col > 6:  # wrap to left if all cols to right are unavailable
+                col = 0
+            printCursor()
+        val = ""
+        next_col = False
+        while val != " ":
+            val = term.inkey(timeout=3)
+            if val.is_sequence:
+                if val.name == "KEY_ENTER":
+                    break
+                if val.name == "KEY_LEFT":
+                    # get next available selection to the left
+                    next_col = next(
+                        (c for c in g.availableColumns()[::-1] if c < col), False
+                    )
+                if val.name == "KEY_RIGHT":
+                    # get next available selection to the right
+                    next_col = next((c for c in g.availableColumns() if c > col), False)
+                if next_col is not False:
+                    eraseCursor()
+                    col = next_col
+                    printCursor()
+        move_valid = g.place("O", col)
     # Print board
-    print(
-        term.home
-        + term.clear
-        + str(g)
-        .replace("X", term.red + "●" + term.normal)
-        .replace("O", term.yellow + "●" + term.normal)
-        .replace("_", "○")
-    )
+    prettyPrintBoard(g)
+    printCursor()
     # Check for a player win
     if g.checkWin("O"):
-        print(term.yellow + term.underline + term.bold + "YELLOW WINS!" + term.normal)
+        print(term.clear)
+        prettyPrintBoard(g)
+        print(
+            "\n"
+            + term.yellow
+            + term.underline
+            + term.bold
+            + "YELLOW WINS!"
+            + term.normal
+        )
         break
