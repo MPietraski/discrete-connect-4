@@ -1,6 +1,5 @@
-import math
 from game import GameBoard
-from copy import copy, deepcopy
+import time
 from blessed import Terminal
 
 
@@ -80,6 +79,17 @@ def eraseCursor():
     printXY(2 * col + 1, 0, str(col))
 
 
+def animatedPlace(board, symb, col):
+    val = (board, 0)
+    while type(val) is not int:
+        time.sleep(0.1)
+        val = board.place(symb, col, True, val[1])
+        if type(val) is int:
+            break
+        prettyPrintBoard(val[0])
+        printCursor()
+
+
 term = Terminal()
 g = GameBoard(6, 7)
 
@@ -90,13 +100,13 @@ print(term.home + term.clear, end="", flush=True)
 prettyPrintBoard(g)
 printCursor()
 print(
-    "Use the arrow keys to select a column.\nPress Enter or Space to drop your piece."
+    "Use the arrow keys to select a column.\nPress Enter, Space, or ↓ to drop your piece."
 )
 while 1:
     # Computer makes its ideal move
     move = bestMove(g, 10)
     # print(move)
-    g.place("X", move[0])
+    animatedPlace(g, "X", move[0])
     # Print the board
     prettyPrintBoard(g)
     printCursor()
@@ -120,7 +130,7 @@ while 1:
         while val != " ":
             val = term.inkey(timeout=3)
             if val.is_sequence:
-                if val.name == "KEY_ENTER":
+                if val.name in ["KEY_ENTER", "KEY_DOWN"]:
                     break
                 if val.name == "KEY_LEFT":
                     # get next available selection to the left
@@ -134,7 +144,7 @@ while 1:
                     eraseCursor()
                     col = next_col
                     printCursor()
-        move_valid = g.place("O", col)
+        move_valid = animatedPlace(g, "O", col)
     # Print board
     prettyPrintBoard(g)
     printCursor()
