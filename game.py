@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 # Class to store board state and actions
 class GameBoard:
     # initialize board of any size
@@ -20,7 +23,7 @@ class GameBoard:
         return s[:-1]
 
     # drop a piece, either X or O, in one of the columns
-    def place(self, symb, col):
+    def place(self, symb, col, do_steps=False, step=0):
         if type(col) is not int:
             if col.isnumeric():
                 col = int(col)
@@ -28,13 +31,19 @@ class GameBoard:
                 return -1
         if col > self.w - 1:
             return -1
-        for i in range(self.h):
-            if self.board[i][col] != "_":
-                if i <= 0:
+        for row in range(self.h):
+            if self.board[row][col] != "_":
+                if row <= 0:
                     return -1
-                self.board[i - 1][col] = symb
+                self.board[row - 1][col] = symb
                 return 1
+            elif do_steps:
+                if row == step:
+                    step_board = deepcopy(self)
+                    step_board.board[row][col] = symb
+                    return (step_board, step + 1)
         self.board[self.h - 1][col] = symb
+        return 1
 
     # remove the top piece of the given column
     def remove(self, row):
