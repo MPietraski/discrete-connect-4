@@ -1,20 +1,21 @@
 from game import GameBoard
 import time
 from blessed import Terminal
+from numpy import inf
 
 
 # recursive minimax function that traverses the game tree to a given length and
 # determines the optimal outcome
-def minimax(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
+def minimax(board, depth, tergetDepth, maxTurn, alpha=-inf, beta=inf):
     score = board.evaluate()
 
-    if score == 100000000 + 1 or score == -100000000 + 1 or depth == tergetDepth:
+    if score == inf or score == -inf or depth == tergetDepth:
         return score
     if board.availableColumns() == []:
         return 0
 
     if maxTurn:
-        best = -1000000000
+        best = -inf
         for i in board.availableColumns():
             board.place("X", i)
             best = max(best, minimax(board, depth + 1, not maxTurn, alpha, beta))
@@ -24,7 +25,7 @@ def minimax(board, depth, tergetDepth, maxTurn, alpha=-10000, beta=10000):
                 break
         return best
     else:
-        best = 10000000000
+        best = inf
         for i in board.availableColumns():
             board.place("O", i)
             best = min(best, minimax(board, depth + 1, not maxTurn, alpha, beta))
@@ -111,7 +112,7 @@ while 1:
     prettyPrintBoard(g)
     printCursor()
     # Check for a computer win
-    if g.checkWin("X"):
+    if g.evaluate() == inf:
         print(term.clear)
         prettyPrintBoard(g)
         print("\n" + term.red + term.underline + term.bold + "RED WINS!" + term.normal)
@@ -149,7 +150,7 @@ while 1:
     prettyPrintBoard(g)
     printCursor()
     # Check for a player win
-    if g.checkWin("O"):
+    if g.evaluate() == -inf:
         print(term.clear)
         prettyPrintBoard(g)
         print(

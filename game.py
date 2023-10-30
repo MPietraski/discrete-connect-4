@@ -1,4 +1,5 @@
 from copy import deepcopy
+from numpy import inf
 
 
 # Class to store board state and actions
@@ -64,7 +65,7 @@ class GameBoard:
 
     # calculates the value of the board assuming X is the maximizer and O is the minimizer
     def evaluate(self):
-        return self.heuristic("X") - self.heuristic("O") + 1
+        return self.heuristic("X") - self.heuristic("O")
 
     # calculates how good a given player is doing in the game, based on the number of pieces
     # they have in a line that has the ability to reach 4
@@ -81,7 +82,7 @@ class GameBoard:
                         == self.board[r][c + 3]
                         == symb
                     ):  # X X X X
-                        return 100000000
+                        return inf
                     elif (
                         self.board[r][c]
                         == self.board[r][c + 1]
@@ -128,7 +129,7 @@ class GameBoard:
                         == self.board[r + 3][c]
                         == symb
                     ):  # X X X X
-                        return 100000000
+                        return inf
                     if (
                         self.board[r][c]
                         == self.board[r + 1][c]
@@ -175,7 +176,7 @@ class GameBoard:
                         == self.board[r + 3][c + 3]
                         == symb
                     ):  # X X X X
-                        return 100000000
+                        return inf
                     if (
                         self.board[r][c]
                         == self.board[r + 1][c + 1]
@@ -222,7 +223,7 @@ class GameBoard:
                         == self.board[r + 3][c - 3]
                         == symb
                     ):  # X X X X
-                        return 100000000
+                        return inf
                     if (
                         self.board[r][c]
                         == self.board[r + 1][c - 1]
@@ -260,37 +261,3 @@ class GameBoard:
                         ):  # _ _ X X
                             score += 10
         return score
-
-    # checks for 4 of a certain piece in a row anywhere on the board
-    def checkWin(self, symb):
-        curLength = 0
-        cutoff = 4
-        # Check for horizontal lengths
-        for r in range(self.h):
-            for c in range(self.w):
-                if self.board[r][c] == symb:
-                    curLength += 1
-                    if curLength >= cutoff:
-                        return True
-                else:
-                    curLength = 0
-        # Check for vertical lengths
-        for c in range(self.w):
-            for r in range(self.h):
-                if self.board[r][c] == symb:
-                    curLength += 1
-                    if curLength >= cutoff:
-                        return True
-                else:
-                    curLength = 0
-        # Check for left-right diagonal lengths
-        for r in range(self.h - cutoff + 1):
-            for c in range(self.w - cutoff + 1):
-                if all(self.board[r + i][c + i] == symb for i in range(cutoff)):
-                    return True
-        # Check for right-left diagonal lengths
-        for r in range(self.h - cutoff + 1):
-            for c in range(cutoff - 1, self.w):
-                if all(self.board[r + i][c - i] == symb for i in range(cutoff)):
-                    return True
-        return False
